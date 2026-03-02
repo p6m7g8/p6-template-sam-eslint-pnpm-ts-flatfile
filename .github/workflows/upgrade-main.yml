@@ -20,7 +20,7 @@ jobs:
           sudo corepack prepare pnpm@latest --activate
           pnpm install
       - name: Cache NPM dependencies
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('pnpm-lock.yaml') }}
