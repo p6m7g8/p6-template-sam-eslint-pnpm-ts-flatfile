@@ -8,11 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: p6m7g8-actions/checkout@main
-
-      - name: Install Node.js
-        uses: p6m7g8-actions/node-setup@main
-
-      - name: Run build
-        run: pnpm run ci
+      - name: Build
+        uses: p6m7g8-actions/p6-build@main
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
