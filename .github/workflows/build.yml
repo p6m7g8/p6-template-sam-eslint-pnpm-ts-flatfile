@@ -1,7 +1,12 @@
 name: Build
 
 on:
-  pull_request: {}
+  # `edited` and `ready_for_review` are here for lint_pr_title, not for build.
+  # A PR whose title is corrected must re-lint, or the required `Lint PR title`
+  # check stays red against a title that is now valid and the author has no way
+  # to clear it.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   workflow_dispatch: {}
 
   # The merge queue needs `build` to report on the queue ref. merge_group is not
@@ -23,3 +28,45 @@ jobs:
 
       - name: Run build
         run: pnpm run ci
+
+  # Mirrors the `lint_pr_title` job in
+  # p6m7g8-actions/p6-gh-workflow-distribute:workflow_files/p6m7g8-actions/build.yml.
+  #
+  # It lives here rather than in pull-request-lint.yml because that file is
+  # `pull_request_target`, which resolves the workflow from the BASE branch. A
+  # rename of its job therefore can never report on the pull request that
+  # introduces the rename, so the ruleset's `Lint PR title` context was
+  # unsatisfiable and this repo could not merge anything. build.yml is
+  # `pull_request`, resolves from the pull request HEAD, and so reports on
+  # itself.
+  #
+  # This repo's build.yml is bespoke -- p6m7g8-actions/node-setup plus
+  # `pnpm run ci`, not a p6m7g8-actions/p6-*-build action -- so distribute.sh's
+  # SKIP-ON-ARCHETYPE-MISMATCH rule never overwrites it and this job is
+  # durable. pull-request-lint.yml is copied from workflow_files/common/
+  # unconditionally on every distribution run, so editing that file instead
+  # would have been reverted, and the revert would have deadlocked the repo a
+  # second time: with `pull_request` on the base and `pull_request_target` on
+  # the head, neither trigger fires and the check never reports at all.
+  #
+  # pull-request-lint.yml also names its job `Lint PR title`, so the context is
+  # reported twice. That is the pack's own fleet-wide shape -- every
+  # p6m7g8-actions repo gets both -- and those pull requests merge.
+  lint_pr_title:
+    name: Lint PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      # Covers `push` on queue refs and `workflow_dispatch`: neither event
+      # carries a pull request title, so the job succeeds without linting
+      # rather than failing a required check on the queue ref.
+      - name: Skip PR title lint outside a pull request
+        if: github.event_name != 'pull_request'
+        run: echo "No PR title on ${{ github.event_name }}; marking check successful."
+
+      - name: Lint PR title
+        if: github.event_name == 'pull_request'
+        uses: p6m7g8-actions/p6-gh-pr-title-lint@main
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
