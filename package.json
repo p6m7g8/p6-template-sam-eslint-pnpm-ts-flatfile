@@ -44,7 +44,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^9.5.1",
     "@swc/jest": "^0.2.39",
-    "@types/aws-lambda": "^8.10.163",
+    "@types/aws-lambda": "^8.10.164",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.3",
     "@typescript-eslint/eslint-plugin": "^8.71.0",
